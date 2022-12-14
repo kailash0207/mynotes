@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "67337289846",
+    "project_id": "mynotes-flutter-kailash",
+    "storage_bucket": "mynotes-flutter-kailash.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67337289846:android:4e75d255ddff20dff4df57",
+        "android_client_info": {
+          "package_name": "com.example.mynotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "67337289846-9kdo8dks1d4kbnfm9vo7nbgb19l1oqas.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD4f_uuk4vlZ4ie8ADmZCHnZT5Tp4j6TM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "67337289846-9kdo8dks1d4kbnfm9vo7nbgb19l1oqas.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
