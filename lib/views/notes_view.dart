@@ -18,23 +18,28 @@ class _NotesViewState extends State<NotesView> {
         title: const Text("My Notes"),
         actions: [
           PopupMenuButton<MenuAction>(
-              onSelected: (value) async {
-                switch (value) {
-                  case MenuAction.logout:
-                    final shouldLogOut = await showLogOutDialog(context);
-                    if (shouldLogOut) {
-                      await FirebaseAuth.instance.signOut();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil("/login/", (route) => false);
-                    }
-                    break;
-                  default:
-                }
-              },
-              itemBuilder: (context) => [
-                    const PopupMenuItem<MenuAction>(
-                        value: MenuAction.logout, child: Text("Log Out"))
-                  ])
+            onSelected: (value) async {
+              switch (value) {
+                case MenuAction.logout:
+                  final shouldLogOut = await showLogOutDialog(context);
+                  if (shouldLogOut) {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      "/login/",
+                      (route) => false,
+                    );
+                  }
+                  break;
+                default:
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<MenuAction>(
+                value: MenuAction.logout,
+                child: Text("Log Out"),
+              )
+            ],
+          )
         ],
       ),
     );
@@ -43,21 +48,24 @@ class _NotesViewState extends State<NotesView> {
 
 Future<bool> showLogOutDialog(BuildContext context) {
   return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-            title: const Text("Log Out"),
-            content: const Text("Do you really want to log out?"),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                  },
-                  child: const Text("Yes")),
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                  child: const Text("No"))
-            ],
-          )).then((value) => value ?? false);
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Log Out"),
+      content: const Text("Do you really want to log out?"),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+          child: const Text("Yes"),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(false);
+          },
+          child: const Text("No"),
+        )
+      ],
+    ),
+  ).then((value) => value ?? false);
 }
