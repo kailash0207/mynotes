@@ -1,6 +1,7 @@
 // ignore_for_file: unrelated_type_equality_checks
 
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import "package:sqflite/sqflite.dart";
 import "package:path_provider/path_provider.dart";
@@ -10,17 +11,30 @@ import 'crud_exceptions.dart';
 class NotesService {
   Database? _db;
   List<DatabaseNote> _notes = [];
-  final _notesStreamController =
-      StreamController<List<DatabaseNote>>.broadcast();
 
   static final NotesService _instance = NotesService._getInstance();
-  NotesService._getInstance();
+  NotesService._getInstance() {
+    _notesStreamController =
+        StreamController<List<DatabaseNote>>.broadcast(onListen: () {
+      _notesStreamController.sink.add(_notes);
+    });
+  }
   factory NotesService() => _instance;
+
+  late final StreamController<List<DatabaseNote>> _notesStreamController;
 
   Future<void> _cacheNotes() async {
     final allNotes = await getAllNotes();
     _notes = allNotes;
     _notesStreamController.add(_notes);
+  }
+
+  Future<void> _ensureDbIsOpen() async {
+    try {
+      await open();
+    } on DatabaseAlreadyOpenException {
+      //empty
+    }
   }
 
   Database _getDatabaseOrThrow() {
@@ -45,6 +59,7 @@ class NotesService {
   }
 
   Future<DatabaseUser> createUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final results = await db.query(userTable,
         limit: 1, where: "$emailColumn = ?", whereArgs: [email.toLowerCase()]);
@@ -59,6 +74,7 @@ class NotesService {
   }
 
   Future<DatabaseUser> getUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final results = await db.query(userTable,
         limit: 1, where: "$emailColumn = ?", whereArgs: [email.toLowerCase()]);
@@ -70,6 +86,7 @@ class NotesService {
   }
 
   Future<void> deleteUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount = db.delete(userTable,
         where: '$emailColumn = ?', whereArgs: [email.toLowerCase()]);
@@ -80,14 +97,16 @@ class NotesService {
   }
 
   Future<DatabaseNote> createNote({required DatabaseUser user}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    final dbUser = getUser(email: user.email);
+    final dbUser = await getUser(email: user.email);
     if (dbUser != user) {
       throw UserDoesNotExistException();
     }
+
     const note = '';
     final noteId =
-        await db.insert(noteTable, {userIdColumn: user.id, note: note});
+        await db.insert(noteTable, {userIdColumn: user.id, noteColumn: note});
     final databaseNote = DatabaseNote(id: noteId, userId: user.id, note: note);
     _notes.add(databaseNote);
     _notesStreamController.add(_notes);
@@ -95,6 +114,7 @@ class NotesService {
   }
 
   Future<void> deleteNote({required int id}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount =
         await db.delete(noteTable, where: 'id = ?', whereArgs: [id]);
@@ -107,6 +127,7 @@ class NotesService {
   }
 
   Future<DatabaseNote> getNote({required int id}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final result =
         await db.query(noteTable, limit: 1, where: "id = ?", whereArgs: [id]);
@@ -121,6 +142,7 @@ class NotesService {
   }
 
   Future<List<DatabaseNote>> getAllNotes() async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final result = await db.query(noteTable);
     return result.map((e) => DatabaseNote.fromRow(e)).toList();
@@ -128,6 +150,7 @@ class NotesService {
 
   Future<DatabaseNote> updateNote(
       {required DatabaseNote note, required String text}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     await getNote(id: note.id);
     final count = db.update(noteTable, {noteColumn: text},
@@ -143,15 +166,16 @@ class NotesService {
     }
   }
 
-  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
-
   Future<int> deleteAllNotes() async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount = await db.delete(noteTable);
     _notes = [];
     _notesStreamController.add(_notes);
     return deletedCount;
   }
+
+  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
 
   Future<void> open() async {
     if (_db != null) {
@@ -198,7 +222,6 @@ class DatabaseUser {
   int get hashCode => id.hashCode;
 }
 
-@immutable
 class DatabaseNote {
   final int id;
   final int userId;
@@ -228,19 +251,19 @@ const emailColumn = 'email';
 const userIdColumn = 'user_id';
 const noteColumn = 'note';
 const createUserTableQuery = '''
-          CREATE TABLE IF NOT EXISTS $userTable(
-            $idColumn INTEGER NOT NULL,
-            $emailColumn TEXT NOT NULL UNIQUE,
-            PRIMARY KEY($idColumn AUTOINCREMENT)
+          CREATE TABLE IF NOT EXISTS "$userTable"(
+            "$idColumn" INTEGER NOT NULL,
+            "$emailColumn" TEXT NOT NULL UNIQUE,
+            PRIMARY KEY("$idColumn" AUTOINCREMENT)
             
           );
         ''';
 const createNoteTableQuery = '''
-          CREATE TABLE IF NOT EXISTS $noteTable(
-            $idColumn INTEGER NOT NULL,
-            $userIdColumn INTEGER NOT NULL,
-            $noteColumn TEXT,
-            FOREIGN KEY($userIdColumn) REFERENCES $userTable($idColumn),
-            PRIMARY KEY($idColumn AUTOINCREMENT)
+          CREATE TABLE IF NOT EXISTS "$noteTable"(
+            "$idColumn" INTEGER NOT NULL,
+            "$userIdColumn" INTEGER NOT NULL,
+            "$noteColumn" TEXT,
+            FOREIGN KEY("$userIdColumn") REFERENCES "$userTable"("$idColumn"),
+            PRIMARY KEY("$idColumn" AUTOINCREMENT)
           );
         ''';
