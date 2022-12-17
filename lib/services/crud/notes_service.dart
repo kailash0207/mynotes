@@ -1,7 +1,10 @@
 // ignore_for_file: unrelated_type_equality_checks
 
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/cupertino.dart';
+import 'package:mynotes/extensions/list/filter.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
 import "package:sqflite/sqflite.dart";
 import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" show join;
@@ -10,6 +13,7 @@ import 'crud_exceptions.dart';
 class NotesService {
   Database? _db;
   List<DatabaseNote> _notes = [];
+  DatabaseUser? _currentUser;
 
   static final NotesService _instance = NotesService._getInstance();
   NotesService._getInstance() {
@@ -45,12 +49,19 @@ class NotesService {
     }
   }
 
-  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser(
+      {required String email, bool setAsCurrentUser = true}) async {
     try {
       final user = await getUser(email: email);
+      if (setAsCurrentUser) {
+        _currentUser = user;
+      }
       return user;
     } on UserDoesNotExistException {
       final user = await createUser(email: email);
+      if (setAsCurrentUser) {
+        _currentUser = user;
+      }
       return user;
     } catch (e) {
       rethrow;
@@ -153,7 +164,7 @@ class NotesService {
     final db = _getDatabaseOrThrow();
     await getNote(id: note.id);
     final count = db.update(noteTable, {noteColumn: text},
-        where: "id = ?", whereArgs: [note.id]);
+        where: "$idColumn = ?", whereArgs: [note.id]);
     if (count == 0) {
       throw CouldNotUpdateNoteException();
     } else {
@@ -174,7 +185,15 @@ class NotesService {
     return deletedCount;
   }
 
-  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
+  Stream<List<DatabaseNote>> get allNotes =>
+      _notesStreamController.stream.filter((note) {
+        final currentUser = _currentUser;
+        if (currentUser != null) {
+          return note.userId == currentUser.id;
+        } else {
+          throw CurrentUserNotSetException();
+        }
+      });
 
   Future<void> open() async {
     if (_db != null) {
