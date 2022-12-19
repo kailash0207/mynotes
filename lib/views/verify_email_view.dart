@@ -17,28 +17,40 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Verify Email")),
-      body: Column(
-        children: [
-          const Text(
-              "Email verification link has been sent. Please click on that link to verify your email."),
-          const Text("If you haven't recieved it yet, please click below."),
-          TextButton(
-            onPressed: () {
-              context
-                  .read<AuthBloc>()
-                  .add(const AuthEventSendEmailVerification());
-            },
-            child: const Text("Send Email Verification Link"),
+        appBar: AppBar(title: const Text("Verify Email")),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                    "Email verification link has been sent. Please click on that link to verify your email. Please log out after verifying email and log in again."),
+                const Text(
+                    "If you haven't recieved it yet, please click below."),
+                Center(
+                  child: Column(
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          context
+                              .read<AuthBloc>()
+                              .add(const AuthEventSendEmailVerification());
+                        },
+                        child: const Text("Send Email Verification Link"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.read<AuthBloc>().add(const AuthEventLogOut());
+                        },
+                        child: const Text("Log Out"),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              context.read<AuthBloc>().add(const AuthEventLogOut());
-            },
-            child: const Text("Log Out"),
-          )
-        ],
-      ),
-    );
+        ));
   }
 }
