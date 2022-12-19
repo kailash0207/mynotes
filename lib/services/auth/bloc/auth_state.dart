@@ -8,7 +8,7 @@ abstract class AuthState {
   final String? isLoadingText;
   const AuthState(
       {required this.isLoading,
-      this.isLoadingText = "Please wait while loading ..."});
+      this.isLoadingText = "Please wait for a moment..."});
 }
 
 class AuthStateUninitialized extends AuthState {
@@ -18,8 +18,9 @@ class AuthStateUninitialized extends AuthState {
 
 class AuthStateRegistering extends AuthState {
   final Exception? exception;
-  const AuthStateRegistering({required this.exception, required isLoading})
-      : super(isLoading: isLoading);
+  const AuthStateRegistering(
+      {required this.exception, required isLoading, String? loadingText})
+      : super(isLoading: isLoading, isLoadingText: loadingText);
 }
 
 class AuthStateLoggedIn extends AuthState {
@@ -29,13 +30,15 @@ class AuthStateLoggedIn extends AuthState {
 }
 
 class AuthStateEmailNotVerified extends AuthState {
-  const AuthStateEmailNotVerified({required isLoading})
+  final Exception? exception;
+  final bool hasSentEmail;
+  const AuthStateEmailNotVerified(
+      {required this.exception, required isLoading, required this.hasSentEmail})
       : super(isLoading: isLoading);
 }
 
 class AuthStateLoggedOut extends AuthState with EquatableMixin {
   final Exception? exception;
-
   const AuthStateLoggedOut(
       {required this.exception, required bool isLoading, String? loadingText})
       : super(isLoading: isLoading, isLoadingText: loadingText);

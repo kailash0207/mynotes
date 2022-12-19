@@ -44,7 +44,7 @@ class HomePage extends StatelessWidget {
         if (state.isLoading) {
           LoadingScreen().show(
               context: context,
-              text: state.isLoadingText ?? "Please wait while loading");
+              text: state.isLoadingText ?? "Please wait for a momemt...");
         } else {
           LoadingScreen().hide();
         }

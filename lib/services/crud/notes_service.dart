@@ -1,10 +1,8 @@
 // ignore_for_file: unrelated_type_equality_checks
 
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:mynotes/extensions/list/filter.dart';
-import 'package:mynotes/services/auth/auth_exceptions.dart';
 import "package:sqflite/sqflite.dart";
 import "package:path_provider/path_provider.dart";
 import "package:path/path.dart" show join;

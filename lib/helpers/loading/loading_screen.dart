@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:mynotes/helpers/loading/loading_screnn_controller.dart';
+import 'package:mynotes/helpers/loading/loading_screen_controller.dart';
 
 class LoadingScreen {
   factory LoadingScreen() => _instance;

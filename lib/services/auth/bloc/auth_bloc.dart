@@ -7,16 +7,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(AuthProvider provider)
       : super(const AuthStateUninitialized(isLoading: true)) {
     on<AuthEventSendEmailVerification>((event, emit) async {
-      await provider.sendEmailVerification();
-      emit(state);
+      emit(const AuthStateEmailNotVerified(
+          isLoading: true, exception: null, hasSentEmail: false));
+      try {
+        await provider.sendEmailVerification();
+        emit(const AuthStateEmailNotVerified(
+            isLoading: false, exception: null, hasSentEmail: true));
+      } on Exception catch (e) {
+        emit(AuthStateEmailNotVerified(
+            exception: e, isLoading: false, hasSentEmail: false));
+      }
     });
     on<AuthEventRegister>((event, emit) async {
+      emit(const AuthStateRegistering(
+          exception: null, isLoading: true, loadingText: "Registering..."));
       final email = event.email;
       final password = event.password;
       try {
         await provider.createUser(email: email, password: password);
-        await provider.sendEmailVerification();
-        emit(const AuthStateEmailNotVerified(isLoading: false));
+        try {
+          await provider.sendEmailVerification();
+          emit(const AuthStateEmailNotVerified(
+              isLoading: false, exception: null, hasSentEmail: true));
+        } on Exception catch (e) {
+          emit(AuthStateEmailNotVerified(
+              exception: e, isLoading: false, hasSentEmail: false));
+        }
       } on Exception catch (e) {
         emit(AuthStateRegistering(exception: e, isLoading: false));
       }
@@ -27,7 +43,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (user == null) {
         emit(const AuthStateLoggedOut(exception: null, isLoading: false));
       } else if (!user.isEmailVerified) {
-        emit(const AuthStateEmailNotVerified(isLoading: false));
+        try {
+          await provider.sendEmailVerification();
+          emit(const AuthStateEmailNotVerified(
+              isLoading: false, exception: null, hasSentEmail: true));
+        } on Exception catch (e) {
+          emit(AuthStateEmailNotVerified(
+              exception: e, isLoading: false, hasSentEmail: false));
+        }
       } else {
         emit(AuthStateLoggedIn(user: user, isLoading: false));
       }
@@ -41,7 +64,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final user = await provider.logIn(email: email, password: password);
         if (!user.isEmailVerified) {
           emit(const AuthStateLoggedOut(exception: null, isLoading: false));
-          emit(const AuthStateEmailNotVerified(isLoading: false));
+          try {
+            provider.sendEmailVerification();
+            emit(const AuthStateEmailNotVerified(
+                isLoading: false, exception: null, hasSentEmail: true));
+          } on Exception catch (e) {
+            emit(AuthStateEmailNotVerified(
+                isLoading: false, exception: e, hasSentEmail: false));
+          }
         } else {
           emit(const AuthStateLoggedOut(exception: null, isLoading: false));
           emit(AuthStateLoggedIn(user: user, isLoading: false));

@@ -36,7 +36,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
           if (state is AuthStateForgotPassword) {
             if (state.hasSentEmail) {
               _controller.clear();
-              await showPasswordResentEmailSentDialog(context);
+              await showPasswordResetEmailSentDialog(context);
             } else if (state.exception != null) {
               if (state.exception is UserNotFoundAuthException) {
                 await showErrorDialog(context,
